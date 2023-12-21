@@ -2,6 +2,7 @@ require('dotenv').config()
 const express = require('express')
 const mongoose = require('mongoose')
 const jsxEngine = require('jsx-view-engine')
+const methodOverride = require('method-override')
 const Fruit = require('./models/fruit')
 const PORT = process.env.PORT || 3000
 
@@ -9,7 +10,7 @@ const app = express()
 
 app.use(express.urlencoded({  extended: true  })) // for when you build server side rendered website
 // app.use(express.json()) for when you build an API
-
+app.use(methodOverride('_method'))
 app.set('view engine', 'jsx')
 app.engine('jsx', jsxEngine())
 
@@ -44,8 +45,34 @@ app.get('/fruits/new', (req, res) => {
 // DELETE
 // backend only functionality that is used to delete a fruit
 
+app.delete('/fruits/:id', async (req, res) => {
+  try {
+    await Fruit.findOneAndDelete({'_id': req.params.id}).then(() => {
+      res.redirect('/fruits')
+    })
+  } catch (error) {
+    res.status(400).send({ message: error.message })
+  }
+})
+
 // UPDATE
 // backend only functionality that is used to update a fruit
+
+app.put('/fruits/:id', async (req, res) => {
+  if (req.body.readyToEat === 'on') {
+    req.body.readyToEat = true
+  } else {
+    req.body.readyToEat = false
+  }
+  try {
+    await Fruit.findOneAndUpdate({ '_id': req.params.id }, req.body, { new: true })
+      .then(() => {
+        res.redirect(`/fruits/${req.params.id}`)
+      })
+  } catch (error) {
+    res.status(400).send({ message: error.message })
+  }
+})
 
 // CREATE
 // backend only functionality that is used to create a fruit
@@ -66,6 +93,17 @@ app.post('/fruits', async (req, res) => {
 
 // EDIT
 // show you a form that lets you edit the fruit
+
+app.get('/fruits/:id/edit', async (req, res) => {
+  try {
+    const foundFruit = await Fruit.findOne({'_id': req.params.id})
+    res.render('fruits/Edit', {
+      fruit: foundFruit
+    })
+  } catch (error) {
+    res.status(400).send({ message: error.message })
+  }
+})
 
 // SHOW
 // shows you one individual fruit
