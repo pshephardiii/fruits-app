@@ -31,7 +31,7 @@ app.get('/fruits', async (req, res) => {
       fruits: foundFruits
     })
   } catch {
-    res.status(400).send({ messsage: error })
+    res.status(400).send({ messsage: error.message })
   }
 })
 
